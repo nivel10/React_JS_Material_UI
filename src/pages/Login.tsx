@@ -84,14 +84,14 @@ const Login: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        setErrorEmail({ success: true, message: '' });
-        setErrorPassword({ success: true, message: '' });
-
-        if (!formDataCheck()) return;
-
         let response: Result<unknown> = { success: true, message: '', data: {}, };
         try {
+            setShowPassword(false);
+            setErrorEmail({ success: true, message: '' });
+            setErrorPassword({ success: true, message: '' });
+
+            if (!formDataCheck()) return;
+
             openLoading();
             response = await login({ email: formData?.email, password: formData?.password, remember_me: formData?.remember_me });
             if (!response?.success) {
@@ -168,7 +168,7 @@ const Login: React.FC = () => {
                             endAdornment={
                                 <InputAdornment position="end">
                                     <IconButton
-                                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                        aria-label={showPassword ? 'hide password' : 'show password'}
                                         onClick={handleClickShowPassword}
                                         onMouseDown={handleMouseDownPassword}
                                         edge="end"

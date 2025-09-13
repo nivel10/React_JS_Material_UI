@@ -6,12 +6,20 @@ import {
     Typography,
     Box,
     Paper,
+    InputAdornment,
+    FormControl,
+    OutlinedInput,
+    InputLabel,
+    IconButton,
 } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/UserAuth';
 import type { Result } from '../interfaces/ICommons';
 import { useNotification } from '../components/useNotification';
+import { AccountCircle, Visibility, VisibilityOff } from '@mui/icons-material';
+import EmailIcon from '@mui/icons-material/Email';
+import { useLoading } from '../components/useLoading';
 
 interface RegisterFormState {
     first_name: string;
@@ -30,6 +38,7 @@ const Register: React.FC = () => {
     const { notify } = useNotification();
     const { register } = useAuth();
     const navigate = useNavigate();
+    const {openLoading, closeLoading} = useLoading();
 
     const [errorFirstName, setErrorFirstName] = useState<ErrorInput>({ success: true, message: '' });
     const [errorLastName, setErrorLastName] = useState<ErrorInput>({ success: true, message: '' });
@@ -44,6 +53,15 @@ const Register: React.FC = () => {
         password: '',
         confirmPassword: '',
     });
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+
+    const handleClickShowPassword = () => setShowPassword((prev) => !prev);
+    const handleClickShowConfirm = () => setShowConfirm((prev) => !prev);
+    const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -85,18 +103,20 @@ const Register: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Reset errors
-        setErrorFirstName({ success: true, message: '' });
-        setErrorLastName({ success: true, message: '' });
-        setErrorEmail({ success: true, message: '' });
-        setErrorPassword({ success: true, message: '' });
-        setErrorConfirm({ success: true, message: '' });
-
-        if (!formDataCheck()) return;
-
         let response: Result<unknown>;
         try {
+            setShowPassword(false);
+            setShowConfirm(false);
+            setErrorFirstName({ success: true, message: '' });
+            setErrorLastName({ success: true, message: '' });
+            setErrorEmail({ success: true, message: '' });
+            setErrorPassword({ success: true, message: '' });
+            setErrorConfirm({ success: true, message: '' });
+
+            if (!formDataCheck()) return;
+
+            openLoading();
+
             response = await register({
                 first_name: formData.first_name,
                 last_name: formData.last_name,
@@ -105,12 +125,15 @@ const Register: React.FC = () => {
             });
 
             if (!response.success) {
+                closeLoading();
                 notify(response?.message, "error", 4000);
                 return;
             }
 
             navigate('/task', { replace: true });
+            closeLoading();
         } catch (ex) {
+            closeLoading();
             let msgText = '';
             if (ex instanceof Error) {
                 msgText = ex?.message;
@@ -151,6 +174,13 @@ const Register: React.FC = () => {
                         onFocus={() => setErrorFirstName({ success: true, message: '' })}
                         value={formData.first_name}
                         onChange={handleChange}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <AccountCircle color="action" />
+                                </InputAdornment>
+                            ),
+                        }}
                     />
                     <TextField
                         margin="normal"
@@ -163,6 +193,13 @@ const Register: React.FC = () => {
                         onFocus={() => setErrorLastName({ success: true, message: '' })}
                         value={formData.last_name}
                         onChange={handleChange}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <AccountCircle color="action" />
+                                </InputAdornment>
+                            ),
+                        }}
                     />
                     <TextField
                         margin="normal"
@@ -175,34 +212,82 @@ const Register: React.FC = () => {
                         onFocus={() => setErrorEmail({ success: true, message: '' })}
                         value={formData.email}
                         onChange={handleChange}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <EmailIcon color="action" />
+                                </InputAdornment>
+                            ),
+                        }}
                     />
-                    <TextField
+                    <FormControl
                         margin="normal"
                         fullWidth
+                        variant="outlined"
                         error={!errorPassword.success}
-                        helperText={!errorPassword.success ? errorPassword.message : ''}
-                        name="password"
-                        label="Password"
-                        type="password"
-                        id="password"
-                        onFocus={() => setErrorPassword({ success: true, message: '' })}
-                        value={formData.password}
-                        onChange={handleChange}
-                    />
-                    <TextField
+                    >
+                        <InputLabel htmlFor="password">Password</InputLabel>
+                        <OutlinedInput
+                            id="password"
+                            name="password"
+                            type={showPassword ? 'text' : 'password'}
+                            value={formData.password}
+                            onChange={handleChange}
+                            onFocus={() => setErrorPassword({ success: true, message: '' })}
+                            endAdornment={
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        aria-label={showPassword ? 'hide password' : 'show password'}
+                                        onClick={handleClickShowPassword}
+                                        onMouseDown={handleMouseDownPassword}
+                                        edge="end"
+                                    >
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            }
+                            label="Password"
+                        />
+                        {!errorPassword.success && (
+                            <Typography variant="caption" color="error">
+                                {errorPassword.message}
+                            </Typography>
+                        )}
+                    </FormControl>
+                    <FormControl
                         margin="normal"
                         fullWidth
+                        variant="outlined"
                         error={!errorConfirm.success}
-                        helperText={!errorConfirm.success ? errorConfirm.message : ''}
-                        name="confirmPassword"
-                        label="Confirm Password"
-                        type="password"
-                        id="confirmPassword"
-                        onFocus={() => setErrorConfirm({ success: true, message: '' })}
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                    />
-
+                    >
+                        <InputLabel htmlFor="confirmPassword">Confirm Password</InputLabel>
+                        <OutlinedInput
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type={showConfirm ? 'text' : 'password'}
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            onFocus={() => setErrorConfirm({ success: true, message: '' })}
+                            endAdornment={
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        aria-label={showConfirm ? 'hide password' : 'show password'}
+                                        onClick={handleClickShowConfirm}
+                                        onMouseDown={handleMouseDownPassword}
+                                        edge="end"
+                                    >
+                                        {showConfirm ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            }
+                            label="Confirm Password"
+                        />
+                        {!errorConfirm.success && (
+                            <Typography variant="caption" color="error">
+                                {errorConfirm.message}
+                            </Typography>
+                        )}
+                    </FormControl>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
                         <Link to="/login" style={{ textDecoration: 'none' }}>
                             <Typography variant="body2" color="primary">
