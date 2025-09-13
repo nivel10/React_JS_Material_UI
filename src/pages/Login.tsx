@@ -13,11 +13,13 @@ import {
 import LoginIcon from '@mui/icons-material/Login';
 import { useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../auth/UserAuth';
+import type { Result } from '../interfaces/ICommons';
+import { useNotification, } from '../components/notificationCtx'
 
 interface LoginFormState {
     email: string;
     password: string;
-    rememberMe: boolean;
+    remember_me: boolean;
 }
 
 interface ErrorInput {
@@ -29,6 +31,7 @@ const Login: React.FC = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const { notify } = useNotification();
     const from = (location.state as { from?: Location })?.from?.pathname || '/task';
 
     const [errorEmail, setErrorEmail] = useState<ErrorInput>({ success: true, message: '' });
@@ -37,14 +40,14 @@ const Login: React.FC = () => {
     const [formData, setFormData] = useState<LoginFormState>({
         email: '',
         password: '',
-        rememberMe: false,
+        remember_me: false,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({
             ...formData,
             [e.target.name]:
-                e.target.name === 'rememberMe' ? e.target.checked : e.target.value,
+                e.target.name === 'remember_me' ? e.target.checked : e.target.value,
         });
     };
 
@@ -73,11 +76,25 @@ const Login: React.FC = () => {
 
         if (!formDataCheck()) return;
 
+        //let response: Result<User> = { success: true, message: '', data: { id: '', first_name: '', last_name: '', email: '', is_deleted: false, created_at: 0, updated_at: 0 }, };
+        let response: Result<unknown> = { success: true, message: '', data: {}, };
         try {
-            await login(formData.email, formData.password, formData.rememberMe);
+            response = await login({ email: formData?.email, password: formData?.password, remember_me: formData?.remember_me });
+            if (!response?.success) {
+                notify(response?.message, 'error', 6000);
+                return;
+            }
+
             navigate(from, { replace: true });
-        } catch (error) {
-            console.error(error);
+        } catch (ex) {
+            let msgText = '';
+            if (ex instanceof Error) {
+                msgText = ex?.message;
+            } else {
+                msgText = String(ex);
+            }
+            notify(msgText, 'error', 6000);
+            //console.error(ex);
         }
     };
 
@@ -135,8 +152,8 @@ const Login: React.FC = () => {
                         <FormControlLabel
                             control={
                                 <Checkbox
-                                    name="rememberMe"
-                                    checked={formData.rememberMe}
+                                    name="remember_me"
+                                    checked={formData.remember_me}
                                     color="primary"
                                     onChange={handleChange}
                                     sx={{

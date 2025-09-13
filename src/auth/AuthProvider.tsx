@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { AuthContext, type User } from "./AuthContext";
+// import { AuthContext, type User } from "./AuthContext";
+import { AuthContext, } from "./AuthContext";
 import { authService, } from '../api/authService';
-import type { LoginPayload, RegisterPayload } from "../interfaces/IAuth";
+import type { LoginPayload, RegisterPayload, User } from "../interfaces/IAuth";
 import type { Result } from "../interfaces/ICommons";
 import axios from "axios";
 
@@ -18,10 +19,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
-  // const login = async (email: string, password: string, rememberMe: boolean,) => {
+  // const login = async (email: string, password: string, remember_me: boolean,) => {
   //   if (!email || !password) throw new Error("Email y contraseña requeridos");
   //   const fakeToken = "demo-token-" + Math.random().toString(36).slice(2);
-  //   const fakeUser = { id: 1, email: email, rememberMe: rememberMe, };
+  //   const fakeUser = { id: 1, email: email, remember_me: remember_me, };
   //   setToken(fakeToken);
   //   setUser(fakeUser);
   //   localStorage.setItem("auth_token", fakeToken);
@@ -32,15 +33,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (data: LoginPayload,) => {
     const response: Result<unknown> = { success: true, data: {}, message: '', };
     try {
-      const fakeToken = "demo-token-" + Math.random().toString(36).slice(2);
-      const fakeUser = { id: 1, email: data?.email, rememberMe: data?.rememberMe || false, };
-      setToken(fakeToken);
-      setUser(fakeUser);
-      localStorage.setItem("auth_token", fakeToken);
-      localStorage.setItem("auth_user", JSON.stringify(fakeUser));
-      response.data = { token: fakeToken, user: fakeUser, };
+      const user = await authService.login({email: data.email, password: data.password, remember_me: data.remember_me, });
+      response.data = user;
+
+       const fakeToken = "demo-token-" + Math.random().toString(36).slice(2);
+       setToken(fakeToken);
+       setUser(user);
+
+       localStorage.setItem('auth_token', fakeToken);
+       localStorage.setItem('auth_user', JSON.stringify(user));
+
       return response;
     } catch (ex) {
+      response.success = false;
       if (axios.isAxiosError(ex)) {
         response.message = (ex?.response?.data as { detail?: string })?.detail || ex?.message;
       } else if (ex instanceof Error) {

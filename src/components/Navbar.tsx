@@ -1,35 +1,3 @@
-// import React from "react";
-// import { Link } from "react-router-dom";
-// import { useAuth } from "../auth/UserAuth";
-// import { Button } from "@mui/material";
-// import LogoutIcon from '@mui/icons-material/Logout';
-
-// const Navbar: React.FC = () => {
-//   const { isAuthenticated, user, logout } = useAuth();
-//   return (
-//     <nav style={{ display: "flex", gap: 12, padding: 12, borderBottom: "1px solid #ddd" }}>
-//       <Link to="/">Home</Link>
-//       {isAuthenticated ? (
-//         <>
-//           <Link to="/task">Task</Link>
-//           <Link to="/user">User</Link>
-//           <span style={{ marginLeft: "auto" }}>{user?.email}</span>
-//           <Button endIcon={<LogoutIcon />} variant="contained" onClick={logout}/>
-//         </>
-//       ) : (
-//         <>
-//           <Link to="/login">Login</Link>
-//           <Link to="/loginNew">Login new</Link>
-//           <Link to="/loginNew"></Link>
-//           <Link to="/register">Register</Link>
-//         </>
-//       )}
-//     </nav>
-//   );
-// };
-
-// export default Navbar;
-
 import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../auth/UserAuth";
@@ -65,10 +33,17 @@ const Navbar: React.FC = () => {
   const privateLinks = [
     { label: "Home", to: "/" },
     { label: "Task", to: "/task" },
+    // { label: "User", to: "/user" }
+  ];
+
+   const privateLinksMobile = [
+    { label: "Home", to: "/" },
+    { label: "Task", to: "/task" },
     { label: "User", to: "/user" }
   ];
 
   const linksToShow = isAuthenticated ? privateLinks : publicLinks;
+  const linksToShowMovil = isAuthenticated ? privateLinksMobile : publicLinks;
 
   return (
     <>
@@ -88,7 +63,7 @@ const Navbar: React.FC = () => {
             Mi App
           </Typography>
 
-          {/* Menú en escritorio */}
+          {/* desktop */}
           <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 2 }}>
             {linksToShow.map((link) => (
               <Link
@@ -103,9 +78,13 @@ const Navbar: React.FC = () => {
             ))}
             {isAuthenticated && (
               <>
-                <Typography variant="body2" sx={{ alignSelf: "center" }}>
-                  {user?.email}
-                </Typography>
+                {/* <Typography variant="body2" sx={{ alignSelf: "center" }}>
+                 {`${user?.first_name}, ${user?.last_name}`}
+                </Typography> */}
+                <Link component={RouterLink}
+                  to={'/user'}
+                  underline="none"
+                  color="primary"> {`${user?.first_name}, ${user?.last_name}`}</Link>
                 <Button
                   variant="contained"
                   //color="inherit"
@@ -128,30 +107,11 @@ const Navbar: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      {/* Drawer lateral para móvil */}
+      {/* mobile */}
       <Drawer anchor="left" open={open} onClose={toggleDrawer(false)}>
         <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
-          {/* <List>
-            {linksToShow.map((link) => (
-              <ListItem
-                button
-                key={link.to}
-                component={RouterLink}
-                to={link.to}
-              >
-                <ListItemText primary={link.label} />
-              </ListItem>
-            ))}
-            {isAuthenticated && (
-              <ListItem button onClick={logout}>
-                <LogoutIcon fontSize="small" style={{ marginRight: 8 }} />
-                <ListItemText primary="Salir" />
-              </ListItem>
-            )}
-          </List> */}
-
           <List>
-            {linksToShow.map((link) => (
+            {linksToShowMovil.map((link) => (
               <ListItem key={link.to} disablePadding>
                 <ListItemButton component={RouterLink} to={link.to}>
                   <ListItemText primary={link.label} />

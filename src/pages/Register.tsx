@@ -11,7 +11,6 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/UserAuth';
 import type { Result } from '../interfaces/ICommons';
-
 import { useNotification } from '../components/notificationCtx';
 
 interface RegisterFormState {
