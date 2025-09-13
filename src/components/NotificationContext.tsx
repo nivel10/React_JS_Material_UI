@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Snackbar, Alert } from "@mui/material";
 import type { AlertColor } from "@mui/material";
-import { NotificationContext, type NotificationMessage } from "./notificationCtx";
+import { NotificationContext, type NotificationMessage } from "./useNotification";
 
 interface NotificationItem {
   id: string;

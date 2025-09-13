@@ -10,14 +10,17 @@ import "@fontsource/poppins/400.css"
 import "@fontsource/poppins/500.css"
 import "@fontsource/poppins/700.css"
 import NotificationProvider from './components/NotificationContext.tsx'
+import LoadingProvider from './components/LoadingContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <NotificationProvider>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <LoadingProvider>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </LoadingProvider>
       </NotificationProvider>
     </BrowserRouter>
 

@@ -8,13 +8,20 @@ import {
     Paper,
     FormControlLabel,
     Checkbox,
-    Link
+    Link,
+    FormControl,
+    InputLabel,
+    OutlinedInput,
+    InputAdornment,
+    IconButton
 } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import { useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../auth/UserAuth';
 import type { Result } from '../interfaces/ICommons';
-import { useNotification, } from '../components/notificationCtx'
+import { useNotification, } from '../components/useNotification'
+import { useLoading } from '../components/useLoading';
+import { AccountCircle, Visibility, VisibilityOff } from '@mui/icons-material';
 
 interface LoginFormState {
     email: string;
@@ -28,6 +35,7 @@ interface ErrorInput {
 }
 
 const Login: React.FC = () => {
+    const { closeLoading, openLoading, } = useLoading();
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -36,6 +44,13 @@ const Login: React.FC = () => {
 
     const [errorEmail, setErrorEmail] = useState<ErrorInput>({ success: true, message: '' });
     const [errorPassword, setErrorPassword] = useState<ErrorInput>({ success: true, message: '' });
+
+    const [showPassword, setShowPassword] = useState(false);
+
+    const handleClickShowPassword = () => setShowPassword((prev) => !prev);
+    const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+    };
 
     const [formData, setFormData] = useState<LoginFormState>({
         email: '',
@@ -70,31 +85,32 @@ const Login: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Reset errors
         setErrorEmail({ success: true, message: '' });
         setErrorPassword({ success: true, message: '' });
 
         if (!formDataCheck()) return;
 
-        //let response: Result<User> = { success: true, message: '', data: { id: '', first_name: '', last_name: '', email: '', is_deleted: false, created_at: 0, updated_at: 0 }, };
         let response: Result<unknown> = { success: true, message: '', data: {}, };
         try {
+            openLoading();
             response = await login({ email: formData?.email, password: formData?.password, remember_me: formData?.remember_me });
             if (!response?.success) {
-                notify(response?.message, 'error', 6000);
+                closeLoading();
+                notify(response?.message, 'error', 4000);
                 return;
             }
 
             navigate(from, { replace: true });
+            closeLoading();
         } catch (ex) {
+            closeLoading();
             let msgText = '';
             if (ex instanceof Error) {
                 msgText = ex?.message;
             } else {
                 msgText = String(ex);
             }
-            notify(msgText, 'error', 6000);
-            //console.error(ex);
+            notify(msgText, 'error', 4000);
         }
     };
 
@@ -126,20 +142,49 @@ const Login: React.FC = () => {
                         onFocus={() => setErrorEmail({ success: true, message: '' })}
                         value={formData.email}
                         onChange={handleChange}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <AccountCircle color="action" />
+                                </InputAdornment>
+                            ),
+                        }}
                     />
-                    <TextField
+
+                    <FormControl
                         margin="normal"
                         fullWidth
+                        variant="outlined"
                         error={!errorPassword.success}
-                        helperText={!errorPassword.success ? errorPassword.message : ''}
-                        name="password"
-                        label="Password"
-                        type="password"
-                        id="password"
-                        onFocus={() => setErrorPassword({ success: true, message: '' })}
-                        value={formData.password}
-                        onChange={handleChange}
-                    />
+                    >
+                        <InputLabel htmlFor="password">Password</InputLabel>
+                        <OutlinedInput
+                            id="password"
+                            name="password"
+                            type={showPassword ? 'text' : 'password'}
+                            value={formData.password}
+                            onChange={handleChange}
+                            onFocus={() => setErrorPassword({ success: true, message: '' })}
+                            endAdornment={
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                        onClick={handleClickShowPassword}
+                                        onMouseDown={handleMouseDownPassword}
+                                        edge="end"
+                                    >
+                                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            }
+                            label="Password"
+                        />
+                        {!errorPassword.success && (
+                            <Typography variant="caption" color="error">
+                                {errorPassword.message}
+                            </Typography>
+                        )}
+                    </FormControl>
 
                     <Box
                         sx={{
