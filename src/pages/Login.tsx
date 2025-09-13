@@ -18,7 +18,7 @@ import {
 import LoginIcon from '@mui/icons-material/Login';
 import { useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../auth/UserAuth';
-import type { Result } from '../interfaces/ICommons';
+import type { IResult } from '../interfaces/ICommons';
 import { useNotification, } from '../components/useNotification'
 import { useLoading } from '../components/useLoading';
 import { AccountCircle, Visibility, VisibilityOff } from '@mui/icons-material';
@@ -84,7 +84,7 @@ const Login: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        let response: Result<unknown> = { success: true, message: '', data: {}, };
+        let response: IResult<unknown> = { success: true, message: '', data: {}, };
         try {
             setShowPassword(false);
             setErrorEmail({ success: true, message: '' });

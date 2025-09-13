@@ -1,13 +1,13 @@
-import type { LoginPayload, RegisterPayload } from "../interfaces/IAuth";
+import type { ILoginPayload, IRegisterPayload } from "../interfaces/IAuth";
 import httpClient from "./httpClient";
 
 export const authService = {
-  login: async (data: LoginPayload) => {
+  login: async (data: ILoginPayload) => {
     const res = await httpClient.post("/auth/login", data);
     return res.data; // { token, user }
   },
 
-  register: async (data: RegisterPayload) => {
+  register: async (data: IRegisterPayload) => {
     const res = await httpClient.post("/auth/register", data);
     return res.data; // { token, user }
   },

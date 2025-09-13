@@ -15,7 +15,7 @@ import {
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/UserAuth';
-import type { Result } from '../interfaces/ICommons';
+import type { IResult } from '../interfaces/ICommons';
 import { useNotification } from '../components/useNotification';
 import { AccountCircle, Visibility, VisibilityOff } from '@mui/icons-material';
 import EmailIcon from '@mui/icons-material/Email';
@@ -103,7 +103,7 @@ const Register: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        let response: Result<unknown>;
+        let response: IResult<unknown>;
         try {
             setShowPassword(false);
             setShowConfirm(false);

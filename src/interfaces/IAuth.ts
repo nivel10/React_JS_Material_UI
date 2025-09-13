@@ -1,17 +1,17 @@
-export interface LoginPayload {
+export interface ILoginPayload {
   email: string;
   password: string;
   remember_me?: boolean;
 }
 
-export interface RegisterPayload {
+export interface IRegisterPayload {
   first_name: string;
   last_name: string;
   email: string;
   password: string;
 }
 
-export interface User {
+export interface IUserLogin {
   id: string;
   first_name: string;
   last_name: string;

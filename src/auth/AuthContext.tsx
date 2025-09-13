@@ -1,25 +1,16 @@
 import { createContext, } from "react";
-import type { Result } from "../interfaces/ICommons";
-import type { LoginPayload, RegisterPayload, User } from "../interfaces/IAuth";
-
-// export interface User {
-//   id: number;
-//   email: string;
-//   first_name: string;
-//   last_name: string;
-//   remember_me: boolean;
-// }
+import type { IResult } from "../interfaces/ICommons";
+import type { ILoginPayload, IRegisterPayload, IUserLogin } from "../interfaces/IAuth";
 
 export interface AuthContextType {
   isAuthenticated: boolean;
   token: string | null;
-  user: User | null;
+  user: IUserLogin | null;
   loading: boolean;
-  // login: (email: string, password: string, remember_me: boolean,) => Promise<boolean>;
-  login: (data: LoginPayload,) => Promise<Result<unknown>>;
-  //register: (data: { email: string; password: string, first_name: string, last_name: string, }) => Promise<boolean>;
-  register: (data: RegisterPayload) => Promise<Result<unknown>>;
+  login: (data: ILoginPayload,) => Promise<IResult<unknown>>;
+  register: (data: IRegisterPayload) => Promise<IResult<unknown>>;
   logout: () => void;
+  userUpdate: (user: IUserLogin) => IResult<IUserLogin>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

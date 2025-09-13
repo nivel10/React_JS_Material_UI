@@ -2,46 +2,40 @@ import { useEffect, useMemo, useState } from "react";
 // import { AuthContext, type User } from "./AuthContext";
 import { AuthContext, } from "./AuthContext";
 import { authService, } from '../api/authService';
-import type { LoginPayload, RegisterPayload, User } from "../interfaces/IAuth";
-import type { Result } from "../interfaces/ICommons";
+import type { ILoginPayload, IRegisterPayload, IUserLogin } from "../interfaces/IAuth";
+import type { IResult } from "../interfaces/ICommons";
 import axios from "axios";
+
+const lsSettings = {
+  user: 'auth_user',
+  token: 'auth_token',
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<IUserLogin | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("auth_token");
-    const savedUser = localStorage.getItem("auth_user");
+    const savedToken = localStorage.getItem(lsSettings?.token);
+    const savedUser = localStorage.getItem(lsSettings?.user);
     if (savedToken) setToken(savedToken);
     if (savedUser) setUser(JSON.parse(savedUser));
     setLoading(false);
   }, []);
 
-  // const login = async (email: string, password: string, remember_me: boolean,) => {
-  //   if (!email || !password) throw new Error("Email y contraseña requeridos");
-  //   const fakeToken = "demo-token-" + Math.random().toString(36).slice(2);
-  //   const fakeUser = { id: 1, email: email, remember_me: remember_me, };
-  //   setToken(fakeToken);
-  //   setUser(fakeUser);
-  //   localStorage.setItem("auth_token", fakeToken);
-  //   localStorage.setItem("auth_user", JSON.stringify(fakeUser));
-  //   return true;
-  // };
-
-  const login = async (data: LoginPayload,) => {
-    const response: Result<unknown> = { success: true, data: {}, message: '', };
+  const login = async (data: ILoginPayload,) => {
+    const response: IResult<unknown> = { success: true, data: {}, message: '', };
     try {
-      const user = await authService.login({email: data.email, password: data.password, remember_me: data.remember_me, });
+      const user = await authService.login({ email: data.email, password: data.password, remember_me: data.remember_me, });
       response.data = user;
 
-       const fakeToken = "demo-token-" + Math.random().toString(36).slice(2);
-       setToken(fakeToken);
-       setUser(user);
+      const fakeToken = "demo-token-" + Math.random().toString(36).slice(2);
+      setToken(fakeToken);
+      setUser(user);
 
-       localStorage.setItem('auth_token', fakeToken);
-       localStorage.setItem('auth_user', JSON.stringify(user));
+      localStorage.setItem(lsSettings?.token, fakeToken);
+      localStorage.setItem(lsSettings?.user, JSON.stringify(user));
 
       return response;
     } catch (ex) {
@@ -55,15 +49,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return response;
     }
-  };
+  }
 
-  // const register = async ({ email, password, first_name, last_name, }: { email: string, password: string, first_name: string, last_name: string }) => {
-  //   if (!email || !password) throw new Error("Campos requeridos");
-  //   return login(email, password, false);
-  // };
+  const userUpdate = (user: IUserLogin) => {
+    const userLogin: IUserLogin = { id: '', first_name: '', last_name: '', email: '', is_deleted: false, created_at: 0, updated_at: 0, };
+    const response: IResult<IUserLogin> = { success: true, message: '', data: userLogin, };
+    try {
+      setUser(user);
+      localStorage.setItem(lsSettings?.user, JSON.stringify(user));
+      response.data = user;
+      return response;
+    } catch (ex) {
+      response.success = false;
+      if (ex instanceof Error) {
+        response.message = ex?.message;
+      } else {
+        response.message = String(ex);
+      }
+      return response;
+    }
+  }
 
-  const register = async (data: RegisterPayload) => {
-    let response: Result<unknown> = { success: true, data: {}, message: '' };
+  const register = async (data: IRegisterPayload) => {
+    let response: IResult<unknown> = { success: true, data: {}, message: '' };
     try {
       await authService.register(data);
       response = await login({ email: data?.email, password: data?.password, });
@@ -87,8 +95,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("auth_user");
+    localStorage.removeItem(lsSettings?.token);
+    localStorage.removeItem(lsSettings?.user);
   };
 
   const value = useMemo(
@@ -100,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login,
       register,
       logout,
+      userUpdate,
     }),
     [token, user, loading,]
   );
