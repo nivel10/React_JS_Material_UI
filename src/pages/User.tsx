@@ -22,6 +22,7 @@ import type { IResult } from "../interfaces/ICommons";
 import type { IUserLogin } from "../interfaces/IAuth";
 import { useLoading } from "../components/useLoading";
 import axios from "axios";
+import httpClient from '../api/httpClient';
 
 const User: React.FC = () => {
   const { user, logout, userUpdate, } = useAuth();
@@ -99,33 +100,40 @@ const User: React.FC = () => {
   };
 
   const handleConfirmDelete = async () => {
-    if (!password.trim()) {
-      setError("Password is required");
-      return;
-    }
     try {
-      const res = await fetch("/api/user/delete", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password })
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.message || "Invalid password");
+      if (!password.trim()) {
+        setError("Password is required");
         return;
       }
 
+      setError('');
+      setShowPassword(false);
+      openLoading();
+
+      await httpClient.delete(
+        `/users/${user?.id}`,
+        {
+          headers: {
+            'User-Password': password?.trim(),
+          }
+        }
+      );
+
+      handleCloseDelete();
       logout();
+      closeLoading();
     } catch (ex) {
       let msgText = '';
-      if (ex instanceof Error) {
+      if (axios.isAxiosError(ex)) {
+        msgText = (ex?.response?.data as { detail?: string })?.detail || ex?.message;
+      } else if (ex instanceof Error) {
         msgText = ex?.message;
       } else {
         msgText = String(ex);
       }
       setError(`An error occurred while deleting the account. ${msgText}`);
     }
+    closeLoading();
   };
 
   return (
@@ -261,6 +269,12 @@ const User: React.FC = () => {
             fullWidth
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onFocus={() => { setError('') }}
+            onKeyDown={(e) => {
+              if (e?.key === 'Enter') {
+                handleConfirmDelete();
+              }
+            }}
             error={!!error}
             helperText={error}
             InputProps={{
