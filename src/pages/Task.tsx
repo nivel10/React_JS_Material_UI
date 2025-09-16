@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Container,
   Typography,
@@ -18,37 +18,55 @@ import {
 } from "@mui/material";
 import { Edit, Delete, Save, Close, CalendarToday } from "@mui/icons-material";
 import { useNotification } from "../components/useNotification";
-import type { IResult } from "../interfaces/ICommons";
-
-interface ITaskItem {
-  id: number;
-  title: string;
-  description: string;
-  completed: boolean;
-  date: string;
-}
-
-interface IInputError {
-  success: boolean;
-  message: string;
-}
+import type { IErrorInput, IResult } from "../interfaces/ICommons";
+import type { ITask } from "../interfaces/ITask";
+import { useLoading } from "../components/useLoading";
+import httpClient from "../api/httpClient";
 
 const Task: React.FC = () => {
   const { notify } = useNotification();
-  const [tasks, setTasks] = useState<ITaskItem[]>([]);
+  const { openLoading, closeLoading, } = useLoading();
+  const [tasks, setTasks] = useState<ITask[]>([]);
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
     completed: false,
-    date: ""
+    date: "",
   });
 
-  const [editTaskId, setEditTaskId] = useState<number | null>(null);
-  const [editData, setEditData] = useState<Partial<ITaskItem>>({});
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
-  const [titleError, setTitleError] = useState<IInputError>({ success: true, message: '', });
-  const [descriptionError, setDescriptionError] = useState<IInputError>({ success: true, message: '', });
-  const [dateError, setDateError] = useState<IInputError>({ success: true, message: '', });
+  const [editTaskId, setEditTaskId] = useState<string | null>(null);
+  const [editData, setEditData] = useState<Partial<ITask>>({});
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<IErrorInput>({ success: true, message: '', });
+  const [descriptionError, setDescriptionError] = useState<IErrorInput>({ success: true, message: '', });
+  const [dateError, setDateError] = useState<IErrorInput>({ success: true, message: '', });
+
+  const getData = useCallback(async () => {
+    try {
+      openLoading();
+
+      const result = await httpClient.get('/tasks');
+      if (result?.data?.length > 0) {
+        // result?.data?.map((task:ITask) => {
+        //   tasks.push(task);
+        // })
+        setTasks(result?.data);
+      }
+
+      closeLoading();
+    } catch (ex) {
+      closeLoading();
+      if (ex instanceof Error) {
+        notify(ex?.message, 'error', 4000);
+      } else {
+        notify(String(ex), 'error', 4000);
+      }
+    }
+  }, [openLoading, closeLoading, notify]);
+
+  useEffect(() => {
+    getData();
+  }, [getData])
 
   const taskCheck = () => {
     const response: IResult<unknown> = { success: true, message: '', data: {} };
@@ -88,7 +106,7 @@ const Task: React.FC = () => {
 
       setTasks([
         ...tasks,
-        { id: Date.now(), ...newTask }
+        { id: Date.now()?.toString(), ...newTask, is_deleted: false, created_at: 0, updated_at: 0, }
       ]);
       setNewTask({ title: "", description: "", completed: false, date: "" });
     } catch (ex) {
@@ -101,13 +119,19 @@ const Task: React.FC = () => {
 
   };
 
-  const handleEditTask = (task: ITaskItem) => {
+  const handleEditTask = (task: ITask) => {
+    console?.log(task);
     setEditTaskId(task.id);
-    setEditData(task);
+    setEditData({
+      ...task,
+      completed: !!task?.completed,
+      description: task?.description ?? '',
+    });
   };
 
   const handleSaveTask = () => {
-    setTasks(tasks.map(t => t.id === editTaskId ? { ...(t as ITaskItem), ...editData } as ITaskItem : t));
+    console?.log(editData);
+    setTasks(tasks.map(t => t.id === editTaskId ? { ...(t as ITask), ...editData } as ITask : t));
     setEditTaskId(null);
     setEditData({});
   };
@@ -131,7 +155,7 @@ const Task: React.FC = () => {
           label="Title"
           value={newTask.title}
           onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-          onFocus={() => setTitleError({success: true, message: '', })}
+          onFocus={() => setTitleError({ success: true, message: '', })}
         />
         <TextField
           error={!descriptionError?.success}
@@ -141,7 +165,7 @@ const Task: React.FC = () => {
           rows={2}
           value={newTask.description}
           onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-          onFocus={() => setDescriptionError({success: true, message: '', })}
+          onFocus={() => setDescriptionError({ success: true, message: '', })}
         />
         <TextField
           error={!dateError?.success}
@@ -151,7 +175,7 @@ const Task: React.FC = () => {
           InputLabelProps={{ shrink: true }}
           value={newTask.date}
           onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
-          onFocus={() => setDateError({success: true, message: '', })}
+          onFocus={() => setDateError({ success: true, message: '', })}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -198,7 +222,8 @@ const Task: React.FC = () => {
                   />
                   <Box sx={{ display: "flex", alignItems: "center" }}>
                     <Checkbox
-                      checked={editData.completed || false}
+                      //checked={editData.completed || false}
+                      checked={!!editData?.completed}
                       onChange={(e) => setEditData({ ...editData, completed: e.target.checked })}
                     />
                     <Typography>Completed</Typography>
@@ -215,12 +240,17 @@ const Task: React.FC = () => {
                   </Typography>
                   <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
                     <Checkbox
-                      checked={task.completed}
-                      onChange={(e) =>
-                        setTasks(tasks.map(t => t.id === task.id ? { ...t, completed: e.target.checked } : t))
-                      }
+                      checked={!!task.completed}
+                      onChange={(e) => {
+                        if (editTaskId === task.id) {
+                          setTasks(tasks.map(t => t.id === task.id ? { ...t, completed: e.target.checked } : t))
+                        }
+                      }}
+                      sx={{
+                        cursor: editTaskId === task.id ? 'pointer' : 'default'
+                      }}
                     />
-                    <Typography>Completed</Typography>
+                    <Typography >Completed</Typography>
                   </Box>
                 </>
               )}

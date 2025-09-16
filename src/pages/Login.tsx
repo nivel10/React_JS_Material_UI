@@ -18,7 +18,7 @@ import {
 import LoginIcon from '@mui/icons-material/Login';
 import { useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../auth/UserAuth';
-import type { IResult } from '../interfaces/ICommons';
+import type { IErrorInput, IResult } from '../interfaces/ICommons';
 import { useNotification, } from '../components/useNotification'
 import { useLoading } from '../components/useLoading';
 import { AccountCircle, Visibility, VisibilityOff } from '@mui/icons-material';
@@ -27,11 +27,6 @@ interface ILoginFormState {
     email: string;
     password: string;
     remember_me: boolean;
-}
-
-interface IErrorInput {
-    success: boolean;
-    message: string;
 }
 
 const Login: React.FC = () => {

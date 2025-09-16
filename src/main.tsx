@@ -1,4 +1,4 @@
-import { StrictMode } from 'react'
+//import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
@@ -13,7 +13,7 @@ import NotificationProvider from './components/NotificationContext.tsx'
 import LoadingProvider from './components/LoadingContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+
     <BrowserRouter>
       <NotificationProvider>
         <LoadingProvider>
@@ -23,6 +23,5 @@ createRoot(document.getElementById('root')!).render(
         </LoadingProvider>
       </NotificationProvider>
     </BrowserRouter>
-
-  </StrictMode>,
+  
 )
