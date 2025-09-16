@@ -12,6 +12,7 @@ import Register from "./pages/Register"
 import PrivateRoute from "./auth/PrivateRouter"
 import Task from './pages/Task'
 import User from "./pages/User"
+import NotFound from "./pages/NotFound"
 
 function App() {
   // const [value, setValue] = useState("");
@@ -63,7 +64,8 @@ function App() {
         <Route path="/" element={<Home />} />
 
         {/* Fallback opcional */}
-        <Route path="*" element={<Home />} />
+        {/* <Route path="*" element={<Home />} /> */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     {/* </Container> */}
 
