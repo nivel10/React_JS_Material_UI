@@ -23,13 +23,13 @@ import { useNotification, } from '../components/useNotification'
 import { useLoading } from '../components/useLoading';
 import { AccountCircle, Visibility, VisibilityOff } from '@mui/icons-material';
 
-interface LoginFormState {
+interface ILoginFormState {
     email: string;
     password: string;
     remember_me: boolean;
 }
 
-interface ErrorInput {
+interface IErrorInput {
     success: boolean;
     message: string;
 }
@@ -42,8 +42,8 @@ const Login: React.FC = () => {
     const { notify } = useNotification();
     const from = (location.state as { from?: Location })?.from?.pathname || '/task';
 
-    const [errorEmail, setErrorEmail] = useState<ErrorInput>({ success: true, message: '' });
-    const [errorPassword, setErrorPassword] = useState<ErrorInput>({ success: true, message: '' });
+    const [errorEmail, setErrorEmail] = useState<IErrorInput>({ success: true, message: '' });
+    const [errorPassword, setErrorPassword] = useState<IErrorInput>({ success: true, message: '' });
 
     const [showPassword, setShowPassword] = useState(false);
 
@@ -52,7 +52,7 @@ const Login: React.FC = () => {
         event.preventDefault();
     };
 
-    const [formData, setFormData] = useState<LoginFormState>({
+    const [formData, setFormData] = useState<ILoginFormState>({
         email: '',
         password: '',
         remember_me: false,
