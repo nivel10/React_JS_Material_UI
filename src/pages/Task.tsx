@@ -16,20 +16,23 @@ import {
   DialogActions,
   InputAdornment
 } from "@mui/material";
-import { Edit, Delete, Save, Close, CalendarToday } from "@mui/icons-material";
+import { Edit, Delete, Close, CalendarToday, Check } from "@mui/icons-material";
 import { useNotification } from "../components/useNotification";
 import type { IErrorInput, IResult } from "../interfaces/ICommons";
 import type { ITask } from "../interfaces/ITask";
 import { useLoading } from "../components/useLoading";
 import httpClient from "../api/httpClient";
 import { useAuth } from "../auth/userAuth";
+import { getError } from "../helpers/common";
 
 const Task: React.FC = () => {
   const { user, } = useAuth();
   const { notify } = useNotification();
+  const notifyRef = React.useRef(notify);
   const { openLoading, closeLoading, } = useLoading();
   const [tasks, setTasks] = useState<ITask[]>([]);
-  const [newTask, setNewTask] = useState({
+  const [newTask, setNewTask] = useState<Partial<ITask>>({
+    created_by: user?.id,
     title: "",
     description: "",
     completed: false,
@@ -39,9 +42,14 @@ const Task: React.FC = () => {
   const [editTaskId, setEditTaskId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<ITask>>({});
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
   const [titleError, setTitleError] = useState<IErrorInput>({ success: true, message: '', });
   const [descriptionError, setDescriptionError] = useState<IErrorInput>({ success: true, message: '', });
   const [dateError, setDateError] = useState<IErrorInput>({ success: true, message: '', });
+  const [titleEditError, setTitleEditError] = useState<IErrorInput>({ success: true, message: '', });
+  const [descriptionEditError, setDescriptionEditError] = useState<IErrorInput>({ success: true, message: '', });
+  const [dateEditError, setDateEditError] = useState<IErrorInput>({ success: true, message: '', });
+
   const [hasError, setHasError] = useState(false);
 
   const getData = useCallback(async () => {
@@ -57,72 +65,100 @@ const Task: React.FC = () => {
     } catch (ex) {
       setHasError(true);
       closeLoading();
-      if (ex instanceof Error) {
-        notify(ex?.message, 'error', 4000);
-      } else {
-        notify(String(ex), 'error', 4000);
-      }
+      notifyRef.current(getError(ex)?.message, 'error', 4000);
     }
-  }, [openLoading, closeLoading, notify, user?.id]);
+  }, [openLoading, closeLoading, user?.id]);
 
   useEffect(() => {
     if (!user?.id || hasError) return;
     getData();
+    console?.log(0);
   }, [getData, user?.id, hasError])
 
-  const taskCheck = () => {
+  const taskCheck = ({ processType = 0 }) => {
     const response: IResult<unknown> = { success: true, message: '', data: {} };
     try {
-      if (!newTask.title) {
-        response.success = false;
-        setTitleError({ success: false, message: 'this field is required', });
-      }
+      if (processType === 0) {
+        if (!newTask.title) {
+          response.success = false;
+          setTitleError({ success: false, message: 'this field is required', });
+        }
 
-      if (!newTask.description) {
-        response.success = false;
-        setDescriptionError({ success: false, message: 'this field is required', });
-      }
+        if (!newTask.description) {
+          response.success = false;
+          setDescriptionError({ success: false, message: 'this field is required', });
+        }
 
-      if (!newTask.date) {
-        response.success = false;
-        setDateError({ success: false, message: 'this field is required', });
+        if (!newTask.date) {
+          response.success = false;
+          setDateError({ success: false, message: 'this field is required', });
+        }
+      } else {
+        if (!editData.title) {
+          response.success = false;
+          setTitleEditError({ success: false, message: 'this field is required', });
+        }
+
+        if (!editData.description) {
+          response.success = false;
+          setDescriptionEditError({ success: false, message: 'this field is required', });
+        }
+
+        if (!editData.date) {
+          response.success = false;
+          setDateEditError({ success: false, message: 'this field is required', });
+        }
       }
     } catch (ex) {
       response.success = false;
-      if (ex instanceof Error) {
-        notify(ex?.message, 'error', 4000);
-      } else {
-        notify(String(ex), 'error', 4000);
-      }
+      // if (ex instanceof Error) {
+      //   notify(ex?.message, 'error', 4000);
+      // } else {
+      //   notify(String(ex), 'error', 4000);
+      // }
+      notifyRef.current(getError(ex)?.message, 'error', 4000);
     }
     return response;
   }
 
-  const handleAddTask = () => {
-    let response: IResult<unknown> = { success: true, message: '', data: {} };
+  const handleAddTask = async () => {
     try {
-      response = taskCheck();
-      if (!response.success) {
-        return;
-      }
+      if (!taskCheck({ processType: 0, })?.success) return;
 
+      openLoading();
+      const result = await httpClient.post('/tasks', newTask);
+      const taskCreated: ITask = result?.data;
       setTasks([
         ...tasks,
-        { id: Date.now()?.toString(), ...newTask, is_deleted: false, created_at: 0, updated_at: 0, }
-      ]);
-      setNewTask({ title: "", description: "", completed: false, date: "" });
-    } catch (ex) {
-      if (ex instanceof Error) {
-        notify(ex?.message, 'error', 4000);
-      } else {
-        notify(String(ex), 'error', 4000);
-      }
-    }
+        taskCreated,
+      ])
 
+      setNewTask({ created_by: user?.id, title: "", description: "", completed: false, date: "", });
+
+      notify('task created', 'success', 4000);
+      closeLoading();
+    } catch (ex) {
+      closeLoading();
+      // if (axios.isAxiosError(ex)) {
+      //   notify((ex?.response?.data as { detail?: string })?.detail || ex?.message, 'error', 4000);
+      // } else if (ex instanceof Error) {
+      //   notify(ex?.message, 'error', 4000);
+      // } else {
+      //   notify(String(ex), 'error', 4000);
+      // }
+      notifyRef.current(getError(ex)?.message, 'error', 4000);
+    }
   };
 
   const handleEditTask = (task: ITask) => {
-    console?.log(task);
+    setTitleError({ success: true, message: '', });
+    setDescriptionError({ success: true, message: '', });
+    setDateError({ success: true, message: '', });
+
+    setTitleEditError({ success: true, message: '', });
+    setDescriptionEditError({ success: true, message: '', });
+    setDateEditError({ success: true, message: '', });
+
     setEditTaskId(task.id);
     setEditData({
       ...task,
@@ -131,11 +167,30 @@ const Task: React.FC = () => {
     });
   };
 
-  const handleSaveTask = () => {
-    console?.log(editData);
-    setTasks(tasks.map(t => t.id === editTaskId ? { ...(t as ITask), ...editData } as ITask : t));
-    setEditTaskId(null);
-    setEditData({});
+  const handleSaveTask = async () => {
+    try {
+      if (!taskCheck({ processType: 1, })?.success) return;
+
+      openLoading();
+      const result = await httpClient.put(`/tasks/user/${editTaskId}/${user?.id}`, editData,);
+      const taskUpdated: ITask = result?.data;
+      setTasks(tasks.map(t => t.id === editTaskId ? { ...(t as ITask), ...taskUpdated } as ITask : t));
+      setEditTaskId(null);
+      setEditData({});
+
+      notify('task updated', 'success', 4000);
+      closeLoading();
+    } catch (ex) {
+      closeLoading();
+      // if (axios.isAxiosError(ex)) {
+      //   notify((ex?.response?.data as { detail?: string })?.detail || ex?.message, 'error', 4000);
+      // } else if (ex instanceof Error) {
+      //   notify(ex?.message, 'error', 4000);
+      // } else {
+      //   notify(String(ex), 'error', 4000);
+      // }
+      notifyRef.current(getError(ex)?.message, 'error', 4000);
+    }
   };
 
   const handleDeleteTask = () => {
@@ -176,10 +231,7 @@ const Task: React.FC = () => {
           type="date"
           InputLabelProps={{ shrink: true }}
           value={newTask.date}
-          onChange={(e) => {
-            setNewTask({ ...newTask, date: e.target.value })
-            //console?.log(parseInt(e?.target?.value));
-          }}
+          onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
           onFocus={() => setDateError({ success: true, message: '', })}
           InputProps={{
             endAdornment: (
@@ -202,13 +254,18 @@ const Task: React.FC = () => {
               {editTaskId === task.id ? (
                 <>
                   <TextField
+                    error={!titleEditError?.success}
+                    helperText={titleEditError?.message || ''}
                     label="Title"
                     fullWidth
                     sx={{ mb: 1 }}
                     value={editData.title || ""}
                     onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                    onFocus={() => setTitleEditError({ success: true, message: '', })}
                   />
                   <TextField
+                    error={!descriptionEditError?.success}
+                    helperText={descriptionEditError?.message || ''}
                     label="Description"
                     fullWidth
                     multiline
@@ -216,8 +273,11 @@ const Task: React.FC = () => {
                     sx={{ mb: 1 }}
                     value={editData.description || ""}
                     onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                    onFocus={() => setDescriptionEditError({ success: true, message: '', })}
                   />
                   <TextField
+                    error={!dateEditError?.success}
+                    helperText={dateEditError?.message || ''}
                     label="Date"
                     type="date"
                     InputLabelProps={{ shrink: true }}
@@ -225,8 +285,8 @@ const Task: React.FC = () => {
                     value={editData.date || ""}
                     onChange={(e) => {
                       setEditData({ ...editData, date: e.target.value })
-                      //console.log(e.target.value);
                     }}
+                    onFocus={() => setDateEditError({ success: true, message: '', })}
                   />
                   <Box sx={{ display: "flex", alignItems: "center" }}>
                     <Checkbox
@@ -267,7 +327,7 @@ const Task: React.FC = () => {
               {editTaskId === task.id ? (
                 <>
                   <IconButton color="success" onClick={handleSaveTask}>
-                    <Save />
+                    <Check />
                   </IconButton>
                   <IconButton color="inherit" onClick={() => setEditTaskId(null)}>
                     <Close />

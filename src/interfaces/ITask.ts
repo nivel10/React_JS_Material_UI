@@ -1,5 +1,6 @@
 export interface ITask {
     id: string;
+    created_by: string;
     title: string;
     description: string;
     completed: boolean;
