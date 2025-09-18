@@ -8,7 +8,7 @@ const PublicRoute: React.FC = () => {
 
   if (loading) return <FullScreenLoader message="Loading wait..." />;
 
-  return isAuthenticated ? <Navigate to="/task" replace /> : <Outlet />;
+  return isAuthenticated ? <Navigate to="/tasks" replace /> : <Outlet />;
 };
 
 export default PublicRoute;

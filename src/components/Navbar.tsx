@@ -61,12 +61,12 @@ const Navbar: React.FC = () => {
 
   const privateLinks = [
     { label: "Home", to: "/" },
-    { label: "Task", to: "/task" },
+    { label: "Tasks", to: "/tasks" },
   ];
 
   const privateLinksMobile = [
     { label: "Home", to: "/" },
-    { label: "Task", to: "/task" },
+    { label: "Tasks", to: "/tasks" },
     { label: "User", to: "/user" }
   ];
 

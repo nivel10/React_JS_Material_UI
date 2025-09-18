@@ -11,13 +11,15 @@ import {
     OutlinedInput,
     InputLabel,
     IconButton,
+    Fade,
+    Stack,
 } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/userAuth';
 import type { IResult } from '../interfaces/ICommons';
 import { useNotification } from '../components/useNotification';
-import { AccountCircle, Visibility, VisibilityOff } from '@mui/icons-material';
+import { AccountCircle, Home, Visibility, VisibilityOff } from '@mui/icons-material';
 import EmailIcon from '@mui/icons-material/Email';
 import { useLoading } from '../components/useLoading';
 
@@ -38,7 +40,8 @@ const Register: React.FC = () => {
     const { notify } = useNotification();
     const { register } = useAuth();
     const navigate = useNavigate();
-    const {openLoading, closeLoading} = useLoading();
+    const { openLoading, closeLoading } = useLoading();
+    const [show, setShow] = useState(false);
 
     const [errorFirstName, setErrorFirstName] = useState<ErrorInput>({ success: true, message: '' });
     const [errorLastName, setErrorLastName] = useState<ErrorInput>({ success: true, message: '' });
@@ -146,167 +149,204 @@ const Register: React.FC = () => {
         }
     };
 
+    React.useEffect(() => {
+        const timer = setTimeout(() => setShow(true), 100);
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
         <Container component="main" maxWidth="xs">
-            <Paper
-                elevation={3}
-                sx={{
-                    padding: 4,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    marginTop: 8,
-                }}
-            >
-                <Typography component="h1" variant="h5">
-                    Register
-                </Typography>
-                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-                    <TextField
-                        margin="normal"
-                        fullWidth
-                        error={!errorFirstName.success}
-                        helperText={!errorFirstName.success ? errorFirstName.message : ''}
-                        id="first_name"
-                        label="First Name"
-                        name="first_name"
-                        autoFocus
-                        onFocus={() => setErrorFirstName({ success: true, message: '' })}
-                        value={formData.first_name}
-                        onChange={handleChange}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <AccountCircle color="action" />
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
-                    <TextField
-                        margin="normal"
-                        fullWidth
-                        error={!errorLastName.success}
-                        helperText={!errorLastName.success ? errorLastName.message : ''}
-                        id="last_name"
-                        label="Last Name"
-                        name="last_name"
-                        onFocus={() => setErrorLastName({ success: true, message: '' })}
-                        value={formData.last_name}
-                        onChange={handleChange}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <AccountCircle color="action" />
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
-                    <TextField
-                        margin="normal"
-                        fullWidth
-                        error={!errorEmail.success}
-                        helperText={!errorEmail.success ? errorEmail.message : ''}
-                        id="email"
-                        label="Email Address"
-                        name="email"
-                        onFocus={() => setErrorEmail({ success: true, message: '' })}
-                        value={formData.email}
-                        onChange={handleChange}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <EmailIcon color="action" />
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
-                    <FormControl
-                        margin="normal"
-                        fullWidth
-                        variant="outlined"
-                        error={!errorPassword.success}
-                    >
-                        <InputLabel htmlFor="password">Password</InputLabel>
-                        <OutlinedInput
-                            id="password"
-                            name="password"
-                            type={showPassword ? 'text' : 'password'}
-                            value={formData.password}
+            <Fade in={show} timeout={800}>
+                <Paper
+                    elevation={3}
+                    sx={{
+                        padding: 4,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        marginTop: 8,
+                    }}
+                >
+                    <Typography component="h1" variant="h5">
+                        Register
+                    </Typography>
+                    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+                        <TextField
+                            margin="normal"
+                            fullWidth
+                            error={!errorFirstName.success}
+                            helperText={!errorFirstName.success ? errorFirstName.message : ''}
+                            id="first_name"
+                            label="First Name"
+                            name="first_name"
+                            autoFocus
+                            onFocus={() => setErrorFirstName({ success: true, message: '' })}
+                            value={formData.first_name}
                             onChange={handleChange}
-                            onFocus={() => setErrorPassword({ success: true, message: '' })}
-                            endAdornment={
-                                <InputAdornment position="end">
-                                    <IconButton
-                                        aria-label={showPassword ? 'hide password' : 'show password'}
-                                        onClick={handleClickShowPassword}
-                                        onMouseDown={handleMouseDownPassword}
-                                        edge="end"
-                                    >
-                                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                                    </IconButton>
-                                </InputAdornment>
-                            }
-                            label="Password"
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <AccountCircle color="action" />
+                                    </InputAdornment>
+                                ),
+                            }}
                         />
-                        {!errorPassword.success && (
-                            <Typography variant="caption" color="error">
-                                {errorPassword.message}
-                            </Typography>
-                        )}
-                    </FormControl>
-                    <FormControl
-                        margin="normal"
-                        fullWidth
-                        variant="outlined"
-                        error={!errorConfirm.success}
-                    >
-                        <InputLabel htmlFor="confirmPassword">Confirm Password</InputLabel>
-                        <OutlinedInput
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            type={showConfirm ? 'text' : 'password'}
-                            value={formData.confirmPassword}
+                        <TextField
+                            margin="normal"
+                            fullWidth
+                            error={!errorLastName.success}
+                            helperText={!errorLastName.success ? errorLastName.message : ''}
+                            id="last_name"
+                            label="Last Name"
+                            name="last_name"
+                            onFocus={() => setErrorLastName({ success: true, message: '' })}
+                            value={formData.last_name}
                             onChange={handleChange}
-                            onFocus={() => setErrorConfirm({ success: true, message: '' })}
-                            endAdornment={
-                                <InputAdornment position="end">
-                                    <IconButton
-                                        aria-label={showConfirm ? 'hide password' : 'show password'}
-                                        onClick={handleClickShowConfirm}
-                                        onMouseDown={handleMouseDownPassword}
-                                        edge="end"
-                                    >
-                                        {showConfirm ? <VisibilityOff /> : <Visibility />}
-                                    </IconButton>
-                                </InputAdornment>
-                            }
-                            label="Confirm Password"
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <AccountCircle color="action" />
+                                    </InputAdornment>
+                                ),
+                            }}
                         />
-                        {!errorConfirm.success && (
-                            <Typography variant="caption" color="error">
-                                {errorConfirm.message}
-                            </Typography>
-                        )}
-                    </FormControl>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                        <Link to="/login" style={{ textDecoration: 'none' }}>
-                            <Typography variant="body2" color="primary">
-                                Already have an account? Sign In
-                            </Typography>
-                        </Link>
-                    </Box>
+                        <TextField
+                            margin="normal"
+                            fullWidth
+                            error={!errorEmail.success}
+                            helperText={!errorEmail.success ? errorEmail.message : ''}
+                            id="email"
+                            label="Email Address"
+                            name="email"
+                            onFocus={() => setErrorEmail({ success: true, message: '' })}
+                            value={formData.email}
+                            onChange={handleChange}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <EmailIcon color="action" />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                        <FormControl
+                            margin="normal"
+                            fullWidth
+                            variant="outlined"
+                            error={!errorPassword.success}
+                        >
+                            <InputLabel htmlFor="password">Password</InputLabel>
+                            <OutlinedInput
+                                id="password"
+                                name="password"
+                                type={showPassword ? 'text' : 'password'}
+                                value={formData.password}
+                                onChange={handleChange}
+                                onFocus={() => setErrorPassword({ success: true, message: '' })}
+                                endAdornment={
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            aria-label={showPassword ? 'hide password' : 'show password'}
+                                            onClick={handleClickShowPassword}
+                                            onMouseDown={handleMouseDownPassword}
+                                            edge="end"
+                                        >
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                }
+                                label="Password"
+                            />
+                            {!errorPassword.success && (
+                                <Typography variant="caption" color="error">
+                                    {errorPassword.message}
+                                </Typography>
+                            )}
+                        </FormControl>
+                        <FormControl
+                            margin="normal"
+                            fullWidth
+                            variant="outlined"
+                            error={!errorConfirm.success}
+                        >
+                            <InputLabel htmlFor="confirmPassword">Confirm Password</InputLabel>
+                            <OutlinedInput
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                type={showConfirm ? 'text' : 'password'}
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                onFocus={() => setErrorConfirm({ success: true, message: '' })}
+                                endAdornment={
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            aria-label={showConfirm ? 'hide password' : 'show password'}
+                                            onClick={handleClickShowConfirm}
+                                            onMouseDown={handleMouseDownPassword}
+                                            edge="end"
+                                        >
+                                            {showConfirm ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                }
+                                label="Confirm Password"
+                            />
+                            {!errorConfirm.success && (
+                                <Typography variant="caption" color="error">
+                                    {errorConfirm.message}
+                                </Typography>
+                            )}
+                        </FormControl>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                            <Link to="/login" style={{ textDecoration: 'none' }}>
+                                <Typography variant="body2" color="primary">
+                                    Already have an account? Sign In
+                                </Typography>
+                            </Link>
+                        </Box>
 
-                    <Button
-                        startIcon={<PersonAddIcon />}
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        sx={{ mt: 3, mb: 2 }}
-                    >
-                        Create Account
-                    </Button>
-                </Box>
-            </Paper>
+                        {/* <Button
+                            startIcon={<PersonAddIcon />}
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            sx={{ mt: 3, mb: 2 }}
+                        >
+                            Create Account
+                        </Button> */}
+
+                        <Stack
+                            sx={{ mt: 3, mb: 2. }}
+                            direction={{ xs: "column", sm: "row" }}
+                            spacing={2}
+                            justifyContent="center"
+                        >
+
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                //size="large"
+                                fullWidth
+                                startIcon={<PersonAddIcon />}
+                                onClick={() => navigate("/login")}>
+                                Create
+                            </Button>
+
+
+                            <Button
+                                variant="outlined"
+                                color="secondary"
+                                //size="large"
+                                fullWidth
+                                startIcon={<Home />}
+                                onClick={() => navigate("/")}
+                            >
+                                Home
+                            </Button>
+                        </Stack>
+                    </Box>
+                </Paper>
+            </Fade>
         </Container>
     );
 };

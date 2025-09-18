@@ -57,7 +57,7 @@ function App() {
         {/* Privado */}
         <Route element={<PrivateRoute />}>
           {/* <Route path="/" element={<Home />} /> */}
-          <Route path="/task" element={<Task />} />
+          <Route path="/tasks" element={<Task />} />
           <Route path="/user" element={<User />} />
         </Route>
 
