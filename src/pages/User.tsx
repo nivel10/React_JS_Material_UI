@@ -15,7 +15,7 @@ import {
   InputAdornment
 } from "@mui/material";
 import { Visibility, VisibilityOff, Edit, Check, Close, } from "@mui/icons-material";
-import { useAuth } from "../auth/UserAuth";
+import { useAuth } from "../auth/userAuth";
 import { useNotification } from "../components/useNotification";
 import { userService } from "../api/userService";
 import type { IResult } from "../interfaces/ICommons";

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { useAuth } from "../auth/UserAuth";
+import { useAuth } from "../auth/userAuth";
 import {
   AppBar,
   Toolbar,

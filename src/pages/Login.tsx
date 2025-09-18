@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import LoginIcon from '@mui/icons-material/Login';
 import { useLocation, useNavigate, Link as RouterLink } from 'react-router-dom';
-import { useAuth } from '../auth/UserAuth';
+import { useAuth } from '../auth/userAuth';
 import type { IErrorInput, IResult } from '../interfaces/ICommons';
 import { useNotification, } from '../components/useNotification'
 import { useLoading } from '../components/useLoading';

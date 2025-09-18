@@ -22,8 +22,10 @@ import type { IErrorInput, IResult } from "../interfaces/ICommons";
 import type { ITask } from "../interfaces/ITask";
 import { useLoading } from "../components/useLoading";
 import httpClient from "../api/httpClient";
+import { useAuth } from "../auth/userAuth";
 
 const Task: React.FC = () => {
+  const { user, } = useAuth();
   const { notify } = useNotification();
   const { openLoading, closeLoading, } = useLoading();
   const [tasks, setTasks] = useState<ITask[]>([]);
@@ -40,21 +42,20 @@ const Task: React.FC = () => {
   const [titleError, setTitleError] = useState<IErrorInput>({ success: true, message: '', });
   const [descriptionError, setDescriptionError] = useState<IErrorInput>({ success: true, message: '', });
   const [dateError, setDateError] = useState<IErrorInput>({ success: true, message: '', });
+  const [hasError, setHasError] = useState(false);
 
   const getData = useCallback(async () => {
     try {
       openLoading();
 
-      const result = await httpClient.get('/tasks');
-      if (result?.data?.length > 0) {
-        // result?.data?.map((task:ITask) => {
-        //   tasks.push(task);
-        // })
+      const result = await httpClient.get(`/tasks/user/${user?.id}`);
+      if (Array.isArray(result?.data) && result?.data?.length > 0) {
         setTasks(result?.data);
       }
 
       closeLoading();
     } catch (ex) {
+      setHasError(true);
       closeLoading();
       if (ex instanceof Error) {
         notify(ex?.message, 'error', 4000);
@@ -62,11 +63,12 @@ const Task: React.FC = () => {
         notify(String(ex), 'error', 4000);
       }
     }
-  }, [openLoading, closeLoading, notify]);
+  }, [openLoading, closeLoading, notify, user?.id]);
 
   useEffect(() => {
+    if (!user?.id || hasError) return;
     getData();
-  }, [getData])
+  }, [getData, user?.id, hasError])
 
   const taskCheck = () => {
     const response: IResult<unknown> = { success: true, message: '', data: {} };
@@ -174,7 +176,10 @@ const Task: React.FC = () => {
           type="date"
           InputLabelProps={{ shrink: true }}
           value={newTask.date}
-          onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
+          onChange={(e) => {
+            setNewTask({ ...newTask, date: e.target.value })
+            //console?.log(parseInt(e?.target?.value));
+          }}
           onFocus={() => setDateError({ success: true, message: '', })}
           InputProps={{
             endAdornment: (
@@ -218,11 +223,13 @@ const Task: React.FC = () => {
                     InputLabelProps={{ shrink: true }}
                     sx={{ mb: 1 }}
                     value={editData.date || ""}
-                    onChange={(e) => setEditData({ ...editData, date: e.target.value })}
+                    onChange={(e) => {
+                      setEditData({ ...editData, date: e.target.value })
+                      //console.log(e.target.value);
+                    }}
                   />
                   <Box sx={{ display: "flex", alignItems: "center" }}>
                     <Checkbox
-                      //checked={editData.completed || false}
                       checked={!!editData?.completed}
                       onChange={(e) => setEditData({ ...editData, completed: e.target.checked })}
                     />
@@ -236,6 +243,7 @@ const Task: React.FC = () => {
                     {task.description}
                   </Typography>
                   <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                    {/* Date: {new Date(task.date * 1000).toISOString().split('T')[0] || "No date"} */}
                     Date: {task.date || "No date"}
                   </Typography>
                   <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
@@ -280,7 +288,6 @@ const Task: React.FC = () => {
         ))}
       </Box>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteConfirmId !== null} onClose={() => setDeleteConfirmId(null)}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
